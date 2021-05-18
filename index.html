@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>ShopBridge</title>
+	<link rel="stylesheet" type="text/css" href="Resources\bootstrap-3.3.7-dist\css\bootstrap.css">
+
+    <script src="Resources\angular(v1.6).js"></script>
+
+	<script src="Resources\angular-animate.js"></script>
+    <script src="Resources\angular-sanitize.js"></script>
+    <script src="Resources\ui-bootstrap-tpls-2.5.0.js"></script>
+	
+	<script src="Resources\sweetalert.min.js"></script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<style type="text/css">
+		.loader {
+		  border: 16px solid #f3f3f3;
+		  border-radius: 50%;
+		  left: 50%;
+		  border-top: 16px solid #558ebb;
+		  width: 150px;
+		  height: 150px;
+		  -webkit-animation: spin 2s linear infinite;
+		  animation: spin 2s linear infinite;
+		}
+
+		@-webkit-keyframes spin {
+		  0% { -webkit-transform: rotate(0deg); }
+		  100% { -webkit-transform: rotate(360deg); }
+		}
+
+		@keyframes spin {
+		  0% { transform: rotate(0deg); }
+		  100% { transform: rotate(360deg); }
+		}
+		
+		
+		@media only screen and (max-width: 450px){
+			
+			
+		}
+
+		#modalForm label{
+			min-width: 7vw;
+		}
+		#modalForm input,#modalForm textarea{
+			width: 80%;
+		}
+		body { 
+			background-color: #cde2e2;
+		}
+		.oval{
+			border: 1px solid #afafaf;
+			border-radius: 25px;
+			padding: 5px;
+			margin-right: 8px;
+			cursor: pointer;
+		}
+		.oval:hover{
+			border: 1px solid black;
+		}
+
+	</style>
+</head>
+<body ng-app="myInventory" ng-controller="inventoryCtrl">
+	<main class="container">
+		
+		<header>
+			<h3 class="text-center">  
+				<p> ************************************************************** </p>
+				<p style="text-align: center;"> INVENTORY DETAILS </p>
+				<p> ************************************************************** </p>
+			</h3>
+			<br>
+		</header>
+
+		<section ng-if="loader">
+			<br>
+			<center>
+				<div class="loader"> </div>
+				<br>
+				<h3 > Fetching Data .Please Wait ... </h3>
+			</center>
+		</section>
+
+
+		<article  ng-if="!loader">
+			<section class="row">
+				<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+					<div class="form-inline">
+						<label> Search: </label> 
+						<input ng-model="searchText" class="form-control" style="width: 80%" placeholder="Search keyword">
+					</div>
+				</div>
+				<div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"> 
+					<div class="form-inline">
+						<label> Page Limit :</label>
+						<select class="form-control" ng-model="limitPerPage" ng-options="option for option in [5,10,15,20,25]" > </select>
+					</div>
+				</div>
+
+				<div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"> 
+					<button class="btn btn-success" style="float: right;width: 50%" title="Add a new item to inventory" ng-click="openModalForm('add',0)">
+						Add Item <span class="glyphicon glyphicon-plus"> </span>
+					</button>
+				</div>
+				
+			</section>
+
+			<br>
+			<section class="table-responsive" style="min-height: 78vh">
+				<table class="table table-striped table-bordered" style="background-color: white">
+					<thead>
+						<th> # </th>
+						<th> ITEM DETAILS </th>
+						<th> ACTION </th>
+					</thead>
+					<tbody >
+						<tr ng-repeat="x in inventory_Data| limitTo: limitPerPage : begin | filter:searchText track by $index">
+							<td class="col-lg-1 col-md-1 col-sm-1 col-xs-1 text-center"> {{ $index + 1 + ( (currentPage-1) * limitPerPage) }} </td>
+							<td class="col-lg-9 col-md-9 col-sm-9 col-xs-9"> 
+								<div class="row">
+									<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6"> 
+										<p> <label> Name : </label> {{x.name}} </p>		
+										<p> <label> Description : </label> {{x.description}} </p>	
+										<p> <label> Categories : </label> {{x.categories.join(', ')}} </p>
+										<p> <label> Tags : </label> {{x.tags.join(', ')}} </p>
+									</div>
+									<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6"> 
+										<p> <label> Net Price : </label> Rs.{{x.net_price}} </p>
+										<p> <label> Tax : </label> {{x.taxes}}% </p>
+										<p> <label> Final Price : </label> Rs.{{x.price}} </p>
+										<p> <label> EAN(uniqueId) : </label> {{x.ean}} </p>
+										<p> <label> UPC(Barcode) : </label> {{x.upc}} </p>
+									</div>
+								</div>
+							</td>
+							<td class="col-lg-2 col-md-2 col-sm-2 col-xs-2"> 
+								<button class="btn btn-xs btn-primary" ng-click="openModalForm('edit',$index)">
+									Edit &nbsp; <span class="glyph glyphicon glyphicon-pencil"> </span>
+								</button> &nbsp;
+								<button class="btn btn-xs btn-danger" title="Delete Item" ng-click="deleteItem($index)">
+									Delete <span class="glyph glyphicon glyphicon-trash">  </span>
+								</button>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</section>
+
+			<section class="text-center">
+				<ul uib-pagination boundary-links="true" total-items="totalItems" ng-model="currentPage" class="pagination-sm" items-per-page="limitPerPage" ng-change="begin= limitPerPage*(currentPage-1)" previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;"></ul>
+			</section>
+		</article>
+	</main>
+
+	
+	<div class="modal fade" id="myModalForm" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	    <div class="modal-dialog">
+	        <div class="modal-content">
+	            <div class="modal-header">
+	                <button type="button" class="close" data-dismiss="modal">
+	                    <span aria-hidden="true">&times;</span>
+	                    <span class="sr-only">Close</span>
+	                </button>
+	                <h4 class="modal-title"> {{ modalHeading }} </h4>
+	            </div>
+	            
+	            <div class="modal-body" style="max-height: 65vh; overflow-y: auto;">
+	            	<form role="form" id="modalForm">
+						<div class="form-inline">
+							<label for="itemName"> Name : </label>
+							<input type="text" ng-model="itemDetails.name" class="form-control" placeholder="Product Name" required />
+						</div>
+						<br>
+
+						<div class="form-inline">
+							<label for="itemDescription"> Description : </label>
+							<textarea class="form-control" rows="5" ng-model="itemDetails.description" required> </textarea> 
+						</div>
+						<br>
+											
+						<div class="form-inline">
+							<label for="itemTax"> Net Price(Rs): </label>
+							<input type="number" step="0.01" ng-model="itemDetails.net_price" class="form-control" placeholder="Product Net Price i.e. price without tax" required />
+						</div>
+						<br>
+
+						<div class="form-inline">
+							<label for="itemTax"> Tax(%) : </label>
+							<input type="number" step="0.02" ng-model="itemDetails.taxes" class="form-control" placeholder=" Example : 15%" style="width: 80%" required />
+						</div>
+						<br>
+
+						<div class="form-inline">
+							<label for="itemTax"> EAN : </label>
+							<input type="text" ng-model="itemDetails.ean" class="form-control" placeholder=" Product EAN" required />
+						</div>
+						<br>
+
+						<div class="form-inline">
+							<label for="itemUpc"> UPC : </label>
+							<input type="text" ng-model="itemDetails.upc" class="form-control" placeholder=" UPC [Barcode] Details" required />
+						</div>
+						<br>
+
+						<div class="form-inline" ng-init="editCat=0; cat_index=0; newCat=''">
+							<label for="itemCategories" > Categories : </label>
+							<div style="margin-left: 7.1vw; display: contents;">
+								<span ng-repeat="category in itemDetails.categories track by $index" class="oval" style="display: inline-flex;" >
+									{{category}} &nbsp;
+									<span class="glyphicon glyphicon-pencil" ng-click="editBoxCat('edit',$index)" title="Edit category" style="font-size: 0.8em; top: 4px"> </span> &nbsp;
+									<span class="glyphicon glyphicon-remove text-danger" ng-click="editBoxCat('remove',$index)" title="Delete category!" style="font-size: 0.8em; top: 4px"> </span> 
+
+								</span>
+								<span style="display: inline-flex;">
+									<input type="text" id="newCat_input" style="width: 45%;margin-left:0.1vw;" class="form-control" ng-model="newCat" /> 
+									<button class="btn btn-xs btn-default glyphicon glyphicon-plus" ng-click="editBoxCat('add',0)" title="Add a new category"> </button>
+								</span>
+
+								<p ng-show="editCat"> 
+									<br>
+									<input type="text" id="" style="width: 40%;margin-left: 7.1vw;" ng-model="itemDetails.categories[cat_index]" class="form-control" /> 
+									<span class="glyphicon glyphicon-ok text-primary" ng-click="itemDetails.categories[cat_index] == '' ? editCat=1: editCat=0" ng-clickOutside="editCat=0" title="Edit category" style="font-size: 1em"> </span > 
+									&nbsp;
+									<span class="glyphicon glyphicon-remove text-danger" ng-click="editBoxCat('remove',cat_index)" title="Delete category!" style="font-size: 1em"> </span > 
+								</p>
+
+							</div>
+
+							<!-- <textarea class="form-control" ng-model="itemDetails.categories" required> </textarea>  -->
+							<!-- <p style="color: grey; margin-left: 7.1vw">  -->
+								<!-- <span class="glyphicon glyphicon-info-sign"> </span> Separate different values by comma(,) to add multiple Categories -->
+							<!-- </p> -->
+						</div>
+						<br>
+
+						<div class="form-inline" ng-init="editTag=0; tag_index=0; newTag=''" >
+							<label for="itemTags"> Tags : </label>
+
+							<div style="margin-left: 7.1vw; display: contents;" >
+								<span ng-repeat="tag in itemDetails.tags track by $index" class="oval" style="display: inline-flex;">
+									{{tag}} &nbsp;
+									<span class="glyphicon glyphicon-pencil" ng-click="editBoxTag('edit',$index)" title="Edit tag" style="font-size: 0.8em;top: 4px"> </span> &nbsp;
+									<span class="glyphicon glyphicon-remove text-danger" title="Delete tag !" ng-click="editBoxTag('remove',$index)" style="font-size: 0.8em;top: 4px"> </span>
+
+								</span>
+
+								<span style="display: inline-flex;">
+									<input type="text" id="newTag_input" style="width: 45%;margin-left: 0.1vw;" class="form-control" ng-model="newTag" /> 
+									<button class="btn btn-xs btn-default glyphicon glyphicon-plus text-primary" title="Add a new tag" ng-click="editBoxTag('add',0)"> </button>
+								</span>
+
+								<p ng-show="editTag"> 
+									<br>
+									<input type="text" id="editTag_input" style="width: 40%;margin-left: 7.1vw;" ng-model="itemDetails.tags[tag_index]" class="form-control" /> 
+									<span class="glyphicon glyphicon-ok text-primary" ng-click=" itemDetails.tags[tag_index] == ''?editTag=1:editTag=0" ng-clickOutside="editTag=0" title="Edit tag" style="font-size: 1em"> </span > 
+									&nbsp;
+									<span class="glyphicon glyphicon-remove text-danger" ng-click="editBoxTag('remove',tag_index)" title="Delete tag!" style="font-size: 1em"> </span > 
+								</p>
+
+							</div>
+						</div>
+						<br>
+	        		</form>
+
+	            </div>
+	            
+	            <div class="modal-footer">
+	                <button class="btn btn-default" data-dismiss="modal"> Close </button>
+	                <button type="submit" class="btn btn-primary" ng-click="submitModalData()" > Done </button>
+	            </div>
+
+	        </div>
+	    </div>
+	</div>
+
+	<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	    <div class="modal-dialog">
+	        <div class="modal-content">
+	            <div class="modal-header">
+	                <button type="button" class="close" data-dismiss="modal">
+	                    <span aria-hidden="true">&times;</span>
+	                    <span class="sr-only">Close</span>
+	                </button>
+	                <h4 class="modal-title"> Confirm Action </h4>
+	            </div>
+	            
+	            <div class="modal-body" style="max-height: 65vh; overflow-y: auto;">
+	            	<h4> Are you sure you want to {{action}} this item ?</h4>
+            	</div>
+	            
+	            <div class="modal-footer">
+	                <button class="btn btn-danger" data-dismiss="modal"> Close </button>
+	                <button type="submit" class="btn btn-success" ng-click="performConfirmed()"> Yes </button>
+		        </div>
+
+	        </div>
+	    </div>
+	</div>
+
+
+
+
+
+</body>
+<script src="Resources\jquery-3.2.1.min.js"></script>
+<script src="Resources\bootstrap-3.3.7-dist\js\bootstrap.js"></script>
+
+<script type="text/javascript" src="app.js"></script>
+<script type="text/javascript" src="mock_data.js"></script>
+</html>
